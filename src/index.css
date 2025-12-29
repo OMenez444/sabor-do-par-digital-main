@@ -1,0 +1,225 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Lanchonete Sabor do Pará - Design System
+   Colors extracted from logo: orange, gold, dark brown, cream
+*/
+
+@layer base {
+  :root {
+    /* Warm cream background */
+    --background: 35 40% 97%;
+    --foreground: 25 50% 15%;
+
+    /* Cards with subtle warmth */
+    --card: 35 30% 99%;
+    --card-foreground: 25 50% 15%;
+
+    --popover: 35 30% 99%;
+    --popover-foreground: 25 50% 15%;
+
+    /* Primary: Vibrant Orange */
+    --primary: 30 90% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Warm Gold */
+    --secondary: 40 80% 55%;
+    --secondary-foreground: 25 50% 15%;
+
+    /* Muted: Soft Tan */
+    --muted: 35 25% 90%;
+    --muted-foreground: 25 30% 45%;
+
+    /* Accent: Dark Brown */
+    --accent: 25 60% 25%;
+    --accent-foreground: 35 40% 97%;
+
+    /* Status Colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 45 90% 50%;
+    --warning-foreground: 25 50% 15%;
+    
+    --info: 200 80% 50%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 35 30% 85%;
+    --input: 35 30% 85%;
+    --ring: 30 90% 50%;
+
+    --radius: 0.75rem;
+
+    /* Custom brand colors */
+    --brand-orange: 30 90% 50%;
+    --brand-gold: 40 80% 55%;
+    --brand-brown: 25 60% 25%;
+    --brand-cream: 35 40% 97%;
+    --brand-amber: 35 85% 60%;
+
+    /* Gradients */
+    --gradient-brand: linear-gradient(135deg, hsl(30 90% 50%), hsl(40 80% 55%));
+    --gradient-warm: linear-gradient(180deg, hsl(35 40% 97%), hsl(35 30% 92%));
+    --gradient-card: linear-gradient(145deg, hsl(35 30% 99%), hsl(35 25% 96%));
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px hsl(25 60% 25% / 0.08);
+    --shadow-md: 0 4px 16px hsl(25 60% 25% / 0.12);
+    --shadow-lg: 0 8px 32px hsl(25 60% 25% / 0.15);
+    --shadow-glow: 0 0 20px hsl(30 90% 50% / 0.3);
+
+    --sidebar-background: 35 30% 99%;
+    --sidebar-foreground: 25 50% 15%;
+    --sidebar-primary: 30 90% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 35 25% 90%;
+    --sidebar-accent-foreground: 25 50% 15%;
+    --sidebar-border: 35 30% 85%;
+    --sidebar-ring: 30 90% 50%;
+  }
+
+  .dark {
+    --background: 25 40% 8%;
+    --foreground: 35 30% 95%;
+
+    --card: 25 35% 12%;
+    --card-foreground: 35 30% 95%;
+
+    --popover: 25 35% 12%;
+    --popover-foreground: 35 30% 95%;
+
+    --primary: 30 85% 55%;
+    --primary-foreground: 25 40% 8%;
+
+    --secondary: 40 70% 45%;
+    --secondary-foreground: 35 30% 95%;
+
+    --muted: 25 30% 18%;
+    --muted-foreground: 35 20% 60%;
+
+    --accent: 40 80% 55%;
+    --accent-foreground: 25 40% 8%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --success: 142 60% 40%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 25 30% 20%;
+    --input: 25 30% 20%;
+    --ring: 30 85% 55%;
+
+    --brand-orange: 30 85% 55%;
+    --brand-gold: 40 70% 50%;
+    --brand-brown: 35 50% 70%;
+    --brand-cream: 35 30% 95%;
+    --brand-amber: 35 80% 55%;
+
+    --gradient-brand: linear-gradient(135deg, hsl(30 85% 55%), hsl(40 70% 50%));
+    --gradient-warm: linear-gradient(180deg, hsl(25 40% 8%), hsl(25 35% 12%));
+    
+    --sidebar-background: 25 35% 10%;
+    --sidebar-foreground: 35 30% 95%;
+    --sidebar-primary: 30 85% 55%;
+    --sidebar-primary-foreground: 25 40% 8%;
+    --sidebar-accent: 25 30% 18%;
+    --sidebar-accent-foreground: 35 30% 95%;
+    --sidebar-border: 25 30% 20%;
+    --sidebar-ring: 30 85% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Nunito', sans-serif;
+  }
+}
+
+@layer utilities {
+  .gradient-brand {
+    background: var(--gradient-brand);
+  }
+  
+  .gradient-warm {
+    background: var(--gradient-warm);
+  }
+  
+  .shadow-brand {
+    box-shadow: var(--shadow-md);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  .text-brand-orange {
+    color: hsl(var(--brand-orange));
+  }
+  
+  .text-brand-gold {
+    color: hsl(var(--brand-gold));
+  }
+  
+  .text-brand-brown {
+    color: hsl(var(--brand-brown));
+  }
+  
+  .bg-brand-orange {
+    background-color: hsl(var(--brand-orange));
+  }
+  
+  .bg-brand-gold {
+    background-color: hsl(var(--brand-gold));
+  }
+  
+  .bg-brand-brown {
+    background-color: hsl(var(--brand-brown));
+  }
+  
+  .bg-brand-cream {
+    background-color: hsl(var(--brand-cream));
+  }
+
+  /* Mobile helpers */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.5rem;
+  }
+}
+
+/* Custom scrollbar for better aesthetics */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--brand-orange) / 0.5);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--brand-orange) / 0.7);
+}
