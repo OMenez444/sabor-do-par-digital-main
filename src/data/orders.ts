@@ -6,6 +6,9 @@ export type OrderStatus = "pending" | "preparing" | "ready" | "delivered" | "can
 export interface Order {
   id: string; // uuid
   table_number: string | null;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  customer_address?: string | null;
   items: CartItem[];
   total: number;
   status: OrderStatus;
@@ -40,6 +43,9 @@ export const getOrders = async (): Promise<Order[]> => {
   return data.map((o: OrderDB) => ({
     id: o.id,
     table_number: o.table_number,
+    customer_name: o.customer_name,
+    customer_phone: o.customer_phone,
+    customer_address: o.customer_address,
     items: o.items as CartItem[],
     total: o.total,
     status: o.status as OrderStatus,
@@ -110,6 +116,9 @@ export const addOrder = async (
   return {
     id: data.id,
     table_number: data.table_number,
+    customer_name: data.customer_name,
+    customer_phone: data.customer_phone,
+    customer_address: data.customer_address,
     items: data.items as CartItem[],
     total: data.total,
     status: data.status as OrderStatus,

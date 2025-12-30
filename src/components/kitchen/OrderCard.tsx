@@ -84,10 +84,17 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMoveNext, actionLabel })
   // Products to show (exclude meta items)
   const displayItems = order.items.filter(i => i.product.category !== "meta");
 
-  const isTable = !isNaN(Number(order.table_number));
+  // Logic: either explicit table_number or "Delivery"
+  // Legacy orders might not have customer_name, so we fallback to "Remote" if needed
+  const isTable = order.table_number && order.table_number.trim() !== "";
+
   const tableDisplay = isTable
     ? order.table_number?.toString().padStart(2, "0")
-    : "R"; // R de Remoto/Retirada
+    : "D"; // D for Delivery
+
+  const primaryLabel = isTable
+    ? `Mesa ${order.table_number}`
+    : (order.customer_name || "Delivery / Balcão");
 
   return (
     <div
@@ -111,7 +118,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMoveNext, actionLabel })
             </div>
             <div>
               <h3 className="font-bold text-foreground text-lg">
-                {isTable ? `Mesa ${order.table_number || "?"}` : (customerInfo?.name || order.table_number)}
+                {primaryLabel}
               </h3>
               <p className="text-sm text-muted-foreground">
                 Pedido #{order.id.slice(0, 8)}
@@ -126,13 +133,21 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMoveNext, actionLabel })
       </div>
 
       {/* Customer Details for Remote Orders */}
-      {customerInfo && (
+      {(!isTable && (order.customer_name || customerInfo)) && (
         <div className="px-4 py-2 bg-background border-b border-border/50 text-sm space-y-1">
-          <div className="font-semibold text-foreground">Entrega para:</div>
+          <div className="font-semibold text-foreground">Dados do Cliente:</div>
           <div className="grid grid-cols-[20px_1fr] gap-1 items-start text-muted-foreground">
-            <span>👤</span> <span className="text-foreground">{customerInfo.name}</span>
-            <span>📞</span> <span>{customerInfo.phone}</span>
-            <span>📍</span> <span className="break-words">{customerInfo.address}</span>
+            <span>👤</span> <span className="text-foreground">{order.customer_name || customerInfo?.name}</span>
+            {(order.customer_phone || customerInfo?.phone) && (
+              <>
+                <span>📞</span> <span>{order.customer_phone || customerInfo?.phone}</span>
+              </>
+            )}
+            {(order.customer_address || customerInfo?.address) && (
+              <>
+                <span>📍</span> <span className="break-words">{order.customer_address || customerInfo?.address}</span>
+              </>
+            )}
           </div>
         </div>
       )}
