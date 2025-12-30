@@ -56,12 +56,25 @@ export const getOrders = async (): Promise<Order[]> => {
   }));
 };
 
-export const getArchivedOrders = async (): Promise<Order[]> => {
-  const { data, error } = await supabase
+export const getArchivedOrders = async (startDate?: Date, endDate?: Date): Promise<Order[]> => {
+  let query = supabase
     .from("orders")
     .select("*")
     .eq("status", "archived")
     .order("created_at", { ascending: false });
+
+  if (startDate) {
+    const startIso = startDate.toISOString();
+    query = query.gte("created_at", startIso);
+  }
+
+  if (endDate) {
+    // End date should be end of day
+    const endIso = endDate.toISOString();
+    query = query.lte("created_at", endIso);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching archived orders:", error);

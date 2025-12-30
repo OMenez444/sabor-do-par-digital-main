@@ -2,20 +2,42 @@ import React, { useEffect, useState } from "react";
 import { Order, getArchivedOrders } from "@/data/orders";
 import { ArrowLeft, DollarSign, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay, isSameDay, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const ReportsPage: React.FC = () => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); // YYYY-MM-DD
+
 
     useEffect(() => {
         const load = async () => {
-            const data = await getArchivedOrders();
-            setOrders(data);
-            setLoading(false);
+            setLoading(true);
+            try {
+                // If date selected, filter by that day. 
+                // We construct start/end range from the selected string string YYYY-MM-DD
+                let start: Date | undefined;
+                let end: Date | undefined;
+
+                if (selectedDate) {
+                    const [year, month, day] = selectedDate.split('-').map(Number);
+                    // Create date handling timezone offset issues by simple construction
+                    const d = new Date(year, month - 1, day);
+                    start = startOfDay(d);
+                    end = endOfDay(d);
+                }
+
+                const data = await getArchivedOrders(start, end);
+                setOrders(data);
+            } catch (error) {
+                console.error("Failed to load reports", error);
+            } finally {
+                setLoading(false);
+            }
         };
         load();
-    }, []);
+    }, [selectedDate]);
 
     const totalSales = orders.reduce((acc, order) => acc + order.total, 0);
 
@@ -29,7 +51,28 @@ const ReportsPage: React.FC = () => {
                     <Link to="/admin/cozinha" className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors">
                         <ArrowLeft className="w-5 h-5 text-foreground" />
                     </Link>
-                    <h1 className="text-xl font-bold">Relatório de Fechamento</h1>
+                    <div>
+                        <h1 className="text-xl font-bold">Relatório de Fechamento</h1>
+                        <p className="text-sm text-muted-foreground">
+                            {selectedDate ? format(parseISO(selectedDate), "EEEE, d 'de' MMMM", { locale: ptBR }) : "Todos os pedidos"}
+                        </p>
+                    </div>
+                </div>
+                <div className="container mt-4">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                        <input
+                            type="date"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className="p-2 rounded-lg border border-border bg-background text-foreground"
+                        />
+                        <button
+                            onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+                            className="px-4 py-2 rounded-lg bg-primary/10 text-primary font-medium hover:bg-primary/20 whitespace-nowrap"
+                        >
+                            Hoje
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -66,36 +109,58 @@ const ReportsPage: React.FC = () => {
                     {loading ? (
                         <div className="p-8 text-center text-muted-foreground">Carregando...</div>
                     ) : orders.length === 0 ? (
-                        <div className="p-8 text-center text-muted-foreground">Nenhum pedido arquivado.</div>
+                        <div className="p-8 text-center text-muted-foreground">
+                            Nenhum pedido encontrado para {selectedDate ? format(parseISO(selectedDate), "dd/MM/yyyy") : "este período"}.
+                        </div>
                     ) : (
-                        <table className="w-full text-left">
-                            <thead className="bg-muted/50 border-b border-border">
-                                <tr>
-                                    <th className="p-4 font-medium text-muted-foreground">Hora</th>
-                                    <th className="p-4 font-medium text-muted-foreground">Mesa</th>
-                                    <th className="p-4 font-medium text-muted-foreground">Itens</th>
-                                    <th className="p-4 font-medium text-muted-foreground text-right">Valor</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                                {orders.map((order) => (
-                                    <tr key={order.id} className="hover:bg-muted/20">
-                                        <td className="p-4">
-                                            {order.created_at ? new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}
-                                        </td>
-                                        <td className="p-4">
-                                            {order.table_number || "Balcão"}
-                                        </td>
-                                        <td className="p-4 text-sm max-w-[200px] truncate" title={order.items.map(i => `${i.quantity}x ${i.product.name}`).join(", ")}>
-                                            {order.items.map(i => `${i.quantity}x ${i.product.name}`).join(", ")}
-                                        </td>
-                                        <td className="p-4 font-medium text-right">
-                                            R$ {order.total.toFixed(2)}
-                                        </td>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-muted/50 border-b border-border">
+                                    <tr>
+                                        <th className="p-4 font-medium text-muted-foreground whitespace-nowrap">Hora</th>
+                                        <th className="p-4 font-medium text-muted-foreground whitespace-nowrap">Cliente / Mesa</th>
+                                        <th className="p-4 font-medium text-muted-foreground min-w-[200px]">Itens</th>
+                                        <th className="p-4 font-medium text-muted-foreground whitespace-nowrap">Pagamento</th>
+                                        <th className="p-4 font-medium text-muted-foreground text-right whitespace-nowrap">Valor</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                    {orders.map((order) => {
+                                        const paymentLabel = {
+                                            "credit_card": "Crédito",
+                                            "debit_card": "Débito",
+                                            "cash": "Dinheiro",
+                                            "pix": "Pix"
+                                        }[order.payment_method || ""] || order.payment_method || "-";
+
+                                        return (
+                                            <tr key={order.id} className="hover:bg-muted/20">
+                                                <td className="p-4 whitespace-nowrap">
+                                                    {order.created_at ? new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="font-medium text-foreground">
+                                                        {order.table_number ? `Mesa ${order.table_number}` : (order.customer_name || "Delivery")}
+                                                    </div>
+                                                    {!order.table_number && order.customer_name && (
+                                                        <div className="text-xs text-muted-foreground">{order.customer_phone}</div>
+                                                    )}
+                                                </td>
+                                                <td className="p-4 text-sm">
+                                                    {order.items.map(i => `${i.quantity}x ${i.product.name}`).join(", ")}
+                                                </td>
+                                                <td className="p-4 text-sm whitespace-nowrap">
+                                                    {paymentLabel}
+                                                </td>
+                                                <td className="p-4 font-medium text-right whitespace-nowrap">
+                                                    R$ {order.total.toFixed(2)}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </div>
             </main>
