@@ -1,94 +1,155 @@
-import { CartItem } from "@/contexts/CartContext";
+import { supabase } from "@/lib/supabase";
+import { CartItem, CustomerInfo } from "@/contexts/CartContext";
 
-export type OrderStatus = "pending" | "preparing" | "ready" | "delivered" | "canceled";
+export type OrderStatus = "pending" | "preparing" | "ready" | "delivered" | "canceled" | "archived";
 
 export interface Order {
-  id: string;
-  table: string | null;
+  id: string; // uuid
+  table_number: string | null;
   items: CartItem[];
   total: number;
   status: OrderStatus;
-  createdAt: string;
+  created_at: string;
 }
 
-const STORAGE_KEY = "sabor-do-para-orders";
+// Mapeamento para o formato do banco (snake_case)
+interface OrderDB {
+  id: string;
+  table_number: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_address: string | null;
+  items: any; // jsonb
+  total: number;
+  status: string;
+  created_at: string;
+}
 
-export const getOrders = (): Order[] => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return [];
-  try {
-    return JSON.parse(stored);
-  } catch (e) {
-    console.error("Failed to parse orders", e);
+export const getOrders = async (): Promise<Order[]> => {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .neq("status", "archived")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching orders:", error);
     return [];
   }
+
+  return data.map((o: OrderDB) => ({
+    id: o.id,
+    table_number: o.table_number,
+    items: o.items as CartItem[],
+    total: o.total,
+    status: o.status as OrderStatus,
+    created_at: o.created_at,
+  }));
 };
 
-export const saveOrders = (orders: Order[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-  // Dispatch a custom event to notify other components in the same window
-  window.dispatchEvent(new Event("orders-updated"));
+export const getArchivedOrders = async (): Promise<Order[]> => {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .eq("status", "archived")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching archived orders:", error);
+    return [];
+  }
+
+  return data.map((o: OrderDB) => ({
+    id: o.id,
+    table_number: o.table_number,
+    items: o.items as CartItem[],
+    total: o.total,
+    status: o.status as OrderStatus,
+    created_at: o.created_at,
+  }));
 };
 
-export const addOrder = (items: CartItem[], total: number, table: string | null): Order => {
-  const orders = getOrders();
-  const newOrder: Order = {
-    id: crypto.randomUUID(),
-    table,
-    items,
-    total,
-    status: "pending",
-    createdAt: new Date().toISOString(),
-  };
+export const archiveAllReadyOrders = async () => {
+  // Archives all orders that are 'ready' or 'delivered'
+  const { error } = await supabase
+    .from("orders")
+    .update({ status: "archived" })
+    .in("status", ["ready", "delivered"]);
 
-  const updatedOrders = [newOrder, ...orders];
-  saveOrders(updatedOrders);
-  return newOrder;
-};
-
-export const updateOrderStatus = (orderId: string, status: OrderStatus) => {
-  const orders = getOrders();
-  const updatedOrders = orders.map(order =>
-    order.id === orderId ? { ...order, status } : order
-  );
-  saveOrders(updatedOrders);
-};
-
-export const closeOrdersForTable = (table: string, finalStatus: OrderStatus = "delivered") => {
-  const orders = getOrders();
-  const updated = orders.map(order =>
-    order.table === table ? { ...order, status: finalStatus } : order
-  );
-  saveOrders(updated);
-};
-
-export const deleteOrdersForTable = (table: string) => {
-  const orders = getOrders();
-  const updated = orders.filter(order => order.table !== table);
-  saveOrders(updated);
-};
-
-// Initial mock data loader (only if empty)
-export const initializeMockData = () => {
-  if (getOrders().length === 0) {
-    const mockOrders: Order[] = [
-      {
-        id: "1",
-        table: "05",
-        items: [],
-        total: 85.0,
-        status: "preparing",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "2",
-        table: "12",
-        items: [],
-        total: 42.5,
-        status: "pending",
-        createdAt: new Date().toISOString(),
-      },
-    ];
-    saveOrders(mockOrders);
+  if (error) {
+    console.error("Error archiving orders:", error);
   }
 };
+
+export const addOrder = async (
+  items: CartItem[],
+  total: number,
+  tableNumber: string | null,
+  customerInfo?: CustomerInfo
+): Promise<Order | null> => {
+
+  const { data, error } = await supabase
+    .from("orders")
+    .insert({
+      table_number: tableNumber,
+      customer_name: customerInfo?.name || null,
+      customer_phone: customerInfo?.phone || null,
+      customer_address: customerInfo?.address || null,
+      total,
+      status: "pending",
+      items: items,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error adding order:", error);
+    return null;
+  }
+
+  return {
+    id: data.id,
+    table_number: data.table_number,
+    items: data.items as CartItem[],
+    total: data.total,
+    status: data.status as OrderStatus,
+    created_at: data.created_at,
+  };
+};
+
+export const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
+  const { error } = await supabase
+    .from("orders")
+    .update({ status })
+    .eq("id", orderId);
+
+  if (error) {
+    console.error("Error updating order:", error);
+  }
+};
+
+export const closeOrdersForTable = async (tableNumber: string, finalStatus: OrderStatus = "delivered") => {
+  const { error } = await supabase
+    .from("orders")
+    .update({ status: finalStatus })
+    .eq("table_number", tableNumber)
+    .neq("status", "archived");
+
+  if (error) {
+    console.error("Error closing orders for table:", error);
+  }
+};
+
+export const deleteOrdersForTable = async (tableNumber: string) => {
+  const { error } = await supabase
+    .from("orders")
+    .delete()
+    .eq("table_number", tableNumber);
+
+  if (error) {
+    console.error("Error deleting orders:", error);
+  }
+};
+
+// Initial mock data is no longer needed for Supabase
+export const initializeMockData = () => { };

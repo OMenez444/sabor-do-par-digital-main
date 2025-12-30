@@ -18,9 +18,12 @@ const MenuManager: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(() => emptyForm());
 
-  const reload = () => setProducts(getProducts());
+  const reload = async () => {
+    const data = await getProducts();
+    setProducts(data);
+  };
 
-  useEffect(() => reload(), []);
+  useEffect(() => { reload(); }, []);
 
   const onChangeFile = (file?: File) => {
     if (!file) return;
@@ -31,9 +34,9 @@ const MenuManager: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.name.trim()) return toast.error("Nome obrigatório");
-    addProduct({ name: form.name, description: form.description, price: form.price, category: form.category, available: form.available, image: form.image });
+    await addProduct({ name: form.name, description: form.description, price: form.price, category: form.category, available: form.available, image: form.image });
     setForm(emptyForm());
     reload();
     toast.success("Produto adicionado");
@@ -47,16 +50,16 @@ const MenuManager: React.FC = () => {
 
   const handleSaveEdit = async () => {
     if (!editingId) return;
-    updateProduct(editingId, { name: form.name, description: form.description, price: form.price, category: form.category, available: form.available, image: form.image });
+    await updateProduct(editingId, { name: form.name, description: form.description, price: form.price, category: form.category, available: form.available, image: form.image });
     setEditingId(null);
     setForm(emptyForm());
     reload();
     toast.success("Produto atualizado");
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Excluir produto?")) return;
-    removeProduct(id);
+    await removeProduct(id);
     reload();
     toast.success("Produto removido");
   };
@@ -119,7 +122,7 @@ const MenuManager: React.FC = () => {
           {products.map(p => (
             <div key={p.id} className="rounded-2xl border border-border bg-card p-4 flex gap-3 items-start">
               <div className="w-20 h-20 rounded-lg bg-muted/10 flex items-center justify-center overflow-hidden">
-                {p.image ? <img src={p.image} alt={p.name} className="object-contain h-full w-full"/> : <ImageIcon />}
+                {p.image ? <img src={p.image} alt={p.name} className="object-contain h-full w-full" /> : <ImageIcon />}
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">

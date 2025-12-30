@@ -10,10 +10,11 @@ interface OrderCardProps {
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({ order, onMoveNext, actionLabel }) => {
-  const createdDate = new Date(order.createdAt);
+  const createdDate = new Date(order.created_at);
 
   const formatTime = (d: Date | string) => {
     const date = typeof d === "string" ? new Date(d) : d;
+    if (isNaN(date.getTime())) return "--:--";
     return new Intl.DateTimeFormat("pt-BR", {
       hour: "2-digit",
       minute: "2-digit",
@@ -22,6 +23,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMoveNext, actionLabel })
 
   const getTimeSince = (d: Date | string) => {
     const date = typeof d === "string" ? new Date(d) : d;
+    if (isNaN(date.getTime())) return "-";
     const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
     if (minutes < 1) return "Agora";
     if (minutes === 1) return "1 min";
@@ -74,7 +76,18 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMoveNext, actionLabel })
 
   const statusConfig = getStatusConfig(order.status);
   const StatusIcon = statusConfig.icon;
-  const tableDisplay = order.table ? order.table.toString().padStart(2, "0") : "?";
+
+  // Extract Customer Info if any
+  const customerInfoItem = order.items.find(i => i.product.id === "meta-customer-info");
+  const customerInfo = customerInfoItem?.customerInfo;
+
+  // Products to show (exclude meta items)
+  const displayItems = order.items.filter(i => i.product.category !== "meta");
+
+  const isTable = !isNaN(Number(order.table_number));
+  const tableDisplay = isTable
+    ? order.table_number?.toString().padStart(2, "0")
+    : "R"; // R de Remoto/Retirada
 
   return (
     <div
@@ -98,10 +111,10 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMoveNext, actionLabel })
             </div>
             <div>
               <h3 className="font-bold text-foreground text-lg">
-                Mesa {order.table || "?"}
+                {isTable ? `Mesa ${order.table_number || "?"}` : (customerInfo?.name || order.table_number)}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Pedido #{order.id}
+                Pedido #{order.id.slice(0, 8)}
               </p>
             </div>
           </div>
@@ -112,10 +125,22 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMoveNext, actionLabel })
         </div>
       </div>
 
+      {/* Customer Details for Remote Orders */}
+      {customerInfo && (
+        <div className="px-4 py-2 bg-background border-b border-border/50 text-sm space-y-1">
+          <div className="font-semibold text-foreground">Entrega para:</div>
+          <div className="grid grid-cols-[20px_1fr] gap-1 items-start text-muted-foreground">
+            <span>👤</span> <span className="text-foreground">{customerInfo.name}</span>
+            <span>📞</span> <span>{customerInfo.phone}</span>
+            <span>📍</span> <span className="break-words">{customerInfo.address}</span>
+          </div>
+        </div>
+      )}
+
       {/* Items */}
       <div className="p-4">
         <ul className="space-y-2">
-          {order.items.map((item, index) => (
+          {displayItems.map((item, index) => (
             <li key={index} className="flex items-start gap-3">
               <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 text-primary font-bold text-sm">
                 {item.quantity}x

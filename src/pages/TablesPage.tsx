@@ -8,11 +8,20 @@ import { cn } from "@/lib/utils";
 
 const TablesPage: React.FC = () => {
   const [tables, setTables] = useState<Table[]>([]);
+  const [orders, setOrders] = useState<any[]>([]); // Using any[] temporarily or import Order type
   const [newNumber, setNewNumber] = useState("");
 
-  useEffect(() => setTables(getTables()), []);
+  const loadData = async () => {
+    setTables(getTables());
+    const ordersData = await getOrders();
+    setOrders(ordersData);
+  };
 
-  const reload = () => setTables(getTables());
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const reload = () => loadData();
 
   const handleAdd = () => {
     if (!newNumber.trim()) return;
@@ -22,9 +31,9 @@ const TablesPage: React.FC = () => {
     toast.success("Mesa adicionada");
   };
 
-  const handleDelete = (tableId: string, tableNumber: string) => {
+  const handleDelete = async (tableId: string, tableNumber: string) => {
     if (!confirm(`Excluir mesa ${tableNumber}? Isto removerá a mesa e todos os pedidos dessa mesa.`)) return;
-    deleteOrdersForTable(tableNumber);
+    await deleteOrdersForTable(tableNumber);
     removeTable(tableId);
     reload();
     toast.success("Mesa excluída");
@@ -36,9 +45,10 @@ const TablesPage: React.FC = () => {
     toast.success("Comanda aberta", { description: `Mesa ${tableNumber}` });
   };
 
-  const handleCloseComanda = (tableNumber: string) => {
+  const handleCloseComanda = async (tableNumber: string) => {
     if (!confirm(`Fechar comanda da mesa ${tableNumber}?`)) return;
-    closeOrdersForTable(tableNumber, "delivered");
+    await closeOrdersForTable(tableNumber, "delivered");
+    reload();
     toast.success("Comanda fechada", { description: `Mesa ${tableNumber}` });
   };
 
@@ -106,40 +116,35 @@ const TablesPage: React.FC = () => {
   };
 
   const handleGenerateQr = async (t: Table) => {
-    let host = window.location.hostname;
-    const port = window.location.port ? `:${window.location.port}` : "";
-
-    if (host === "localhost" || host === "127.0.0.1") {
-      toast("Detectando IP local...", { duration: 3000 });
-      const detected = await detectLocalIp(4000);
-      if (detected) {
-        const useDetected = confirm(`Detectei o IP ${detected}. Deseja usar este IP para gerar o QR (recomendado para escanear via celular)?`);
-        if (useDetected) host = detected;
-        else {
-          const provided = prompt(
-            'Informe o IP/host que os celulares devem usar (ex: 192.168.0.10):',
-            host
-          );
-          if (!provided) return toast.error("Geracao cancelada: IP não fornecido");
-          host = provided;
-        }
-      } else {
-        const provided = prompt(
-          'Não consegui detectar automaticamente o IP local. Informe o IP/host que os celulares devem usar (ex: 192.168.0.10):',
-          host
-        );
-        if (!provided) return toast.error("Geracao cancelada: IP não fornecido");
-        host = provided;
+    // 1. Prioridade: Variável de ambiente (Vercel)
+    const envBase = import.meta.env.VITE_BASE_URL;
+    if (envBase) {
+      const url = `${envBase}/menu/sabor-do-para?mesa=${t.number}`;
+      try {
+        const toDataURL = (QRCode as unknown as { toDataURL: (text: string, options?: Record<string, unknown>) => Promise<string> }).toDataURL;
+        const dataUrl = await toDataURL(url, { margin: 4, width: 800, errorCorrectionLevel: 'H' });
+        setTableQr(t.id, url, dataUrl);
+        reload();
+        toast.success("QR gerado (URL de produção/ambiente)");
+        return;
+      } catch (e) {
+        console.error(e);
+        toast.error("Falha ao gerar QR com VITE_BASE_URL");
+        return;
       }
     }
 
-    const url = `${window.location.protocol}//${host}${port}/menu/sabor-do-para?mesa=${t.number}`;
+    // 2. Fallback: Lógica  const handleGenerateQr = async (t: Table) => {
+    // URL fixa de produção para garantir QR Codes permanentes
+    const baseUrl = "https://sabor-do-par-digital-main.vercel.app";
+    const url = `${baseUrl}/menu/sabor-do-para?mesa=${t.number}`;
+
     try {
       const toDataURL = (QRCode as unknown as { toDataURL: (text: string, options?: Record<string, unknown>) => Promise<string> }).toDataURL;
       const dataUrl = await toDataURL(url, { margin: 4, width: 800, errorCorrectionLevel: 'H' });
       setTableQr(t.id, url, dataUrl);
       reload();
-      toast.success("QR gerado", { description: 'Use o IP da máquina para escanear via celular' });
+      toast.success("QR Code Permanente Gerado", { description: 'Vinculado ao site oficial (Vercel)' });
     } catch (e) {
       console.error(e);
       toast.error("Falha ao gerar QR");
@@ -168,7 +173,7 @@ const TablesPage: React.FC = () => {
             <p className="text-muted-foreground">Nenhuma mesa cadastrada</p>
           ) : (
             tables.map((t) => {
-              const tableOrders = getOrders().filter(o => o.table === t.number);
+              const tableOrders = orders.filter(o => o.table_number === t.number);
               return (
                 <div key={t.id} className="rounded-2xl border border-border bg-card p-4 flex gap-4 items-start">
                   <div className="flex-1">

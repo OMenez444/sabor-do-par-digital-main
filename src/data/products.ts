@@ -1,3 +1,6 @@
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+
 export interface Product {
   id: string;
   name: string;
@@ -21,7 +24,7 @@ export const categories: Category[] = [
   { id: "sobremesas", name: "Sobremesas", icon: "🍰" },
 ];
 
-export const products: Product[] = [
+export const initialProducts: Product[] = [
   // Lanches
   {
     id: "1",
@@ -148,53 +151,82 @@ export const products: Product[] = [
   },
 ];
 
-const PRODUCTS_KEY = "sabor-do-para-products";
+export const getProducts = async (): Promise<Product[]> => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("name");
 
-export const getProducts = (): Product[] => {
-  const stored = localStorage.getItem(PRODUCTS_KEY);
-  if (!stored) {
-    // seed default products
-    saveProducts(products);
-    return products;
+  if (error) {
+    console.error("Error fetching products:", error);
+    return [];
   }
-  try {
-    return JSON.parse(stored) as Product[];
-  } catch (e) {
-    console.error("Failed to parse products", e);
-    return products;
+
+  // Se nao tiver produtos, seedar com os iniciais
+  if (data.length === 0) {
+    return await seedProducts();
   }
+
+  return data;
 };
 
-export const saveProducts = (p: Product[]) => {
-  localStorage.setItem(PRODUCTS_KEY, JSON.stringify(p));
-  return p;
+export const seedProducts = async (): Promise<Product[]> => {
+  console.log("Seeding initial products...");
+  // Remove IDs fixos para deixar o banco gerar UUIDs novos ou usa os fixos se forem validos UUIDs?
+  // O initialProducts tem IDs numéricos 1, 2... O banco espera UUID. Vamos remover o ID.
+  const toInsert = initialProducts.map(({ id, ...rest }) => rest);
+
+  const { data, error } = await supabase
+    .from("products")
+    .insert(toInsert)
+    .select();
+
+  if (error) {
+    console.error("Error seeding products:", error);
+    return [];
+  }
+  return data || [];
 };
 
-export const addProduct = (product: Omit<Product, "id">): Product => {
-  const current = getProducts();
-  const newProduct: Product = { id: crypto.randomUUID(), ...product };
-  const updated = [newProduct, ...current];
-  saveProducts(updated);
-  return newProduct;
+export const addProduct = async (product: Omit<Product, "id">): Promise<Product | null> => {
+  const { data, error } = await supabase
+    .from("products")
+    .insert(product)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error adding product:", error);
+    toast.error("Erro ao adicionar produto");
+    return null;
+  }
+  return data;
 };
 
-export const updateProduct = (id: string, updates: Partial<Product>): Product | undefined => {
-  const current = getProducts();
-  const updated = current.map((p) => (p.id === id ? { ...p, ...updates } : p));
-  saveProducts(updated);
-  return updated.find((p) => p.id === id);
+export const updateProduct = async (id: string, updates: Partial<Product>): Promise<Product | null> => {
+  const { data, error } = await supabase
+    .from("products")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating product:", error);
+    toast.error("Erro ao atualizar produto");
+    return null;
+  }
+  return data;
 };
 
-export const removeProduct = (id: string) => {
-  const current = getProducts();
-  const updated = current.filter((p) => p.id !== id);
-  saveProducts(updated);
-};
+export const removeProduct = async (id: string) => {
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", id);
 
-export const getProductsByCategory = (categoryId: string): Product[] => {
-  return getProducts().filter((product) => product.category === categoryId);
-};
-
-export const getProductById = (id: string): Product | undefined => {
-  return getProducts().find((product) => product.id === id);
+  if (error) {
+    console.error("Error deleting product:", error);
+    toast.error("Erro ao remover produto");
+  }
 };

@@ -1,13 +1,14 @@
 import React from "react";
 import logo from "@/assets/logo.png";
-import { ChefHat, RefreshCw, CheckSquare } from "lucide-react";
+import { ChefHat, RefreshCw, CheckSquare, LogOut } from "lucide-react";
 
 interface KitchenHeaderProps {
   onRefresh: () => void;
   onManageTables?: () => void;
+  onFinalize: () => void;
 }
 
-const KitchenHeader: React.FC<KitchenHeaderProps> = ({ onRefresh, onManageTables }) => {
+const KitchenHeader: React.FC<KitchenHeaderProps> = ({ onRefresh, onManageTables, onFinalize }) => {
   const currentTime = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
     day: "2-digit",
@@ -41,7 +42,16 @@ const KitchenHeader: React.FC<KitchenHeaderProps> = ({ onRefresh, onManageTables
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => (onManageTables ? onManageTables() : window.open('/admin/mesas','_blank'))}
+              onClick={onFinalize}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-destructive/10 text-destructive font-semibold hover:bg-destructive/20 transition-colors mr-2"
+              title="Limpa pedidos prontos e salva relatorio"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Finalizar Expediente</span>
+            </button>
+
+            <button
+              onClick={() => (onManageTables ? onManageTables() : window.open('/admin/mesas', '_blank'))}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition-colors"
             >
               <CheckSquare className="w-4 h-4" />
@@ -49,10 +59,10 @@ const KitchenHeader: React.FC<KitchenHeaderProps> = ({ onRefresh, onManageTables
             </button>
 
             <button
-              onClick={() => window.open('/admin/cardapio','_blank')}
+              onClick={() => window.open('/admin/cardapio', '_blank')}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition-colors"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
               <span className="hidden sm:inline">Gerenciar Cardápio</span>
             </button>
 
