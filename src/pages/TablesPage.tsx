@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getTables, addTable, removeTable, setTableQr, Table } from "@/data/tables";
 import { getOrders, deleteOrdersForTable, closeOrdersForTable } from "@/data/orders";
 import * as QRCode from "qrcode";
-import { Plus, Trash2, X, QrCode } from "lucide-react";
+import { Plus, Trash2, X, QrCode, Bike, Copy, ExternalLink, Download } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,9 @@ const TablesPage: React.FC = () => {
   const [tables, setTables] = useState<Table[]>([]);
   const [orders, setOrders] = useState<any[]>([]); // Using any[] temporarily or import Order type
   const [newNumber, setNewNumber] = useState("");
+  const [deliveryQrDataUrl, setDeliveryQrDataUrl] = useState<string | null>(null);
+
+  const deliveryUrl = (import.meta.env.VITE_BASE_URL || "https://sabor-do-par-digital-main.vercel.app") + "/menu/sabor-do-para";
 
   const loadData = async () => {
     setTables(getTables());
@@ -29,6 +32,37 @@ const TablesPage: React.FC = () => {
     setNewNumber("");
     reload();
     toast.success("Mesa adicionada");
+  };
+
+  const handleCopyDeliveryLink = async () => {
+    try {
+      await navigator.clipboard.writeText(deliveryUrl);
+      toast.success("Link Delivery copiado!", { description: deliveryUrl });
+    } catch (e) {
+      toast.error("Erro ao copiar link");
+    }
+  };
+
+  const handleGenerateDeliveryQr = async () => {
+    try {
+      const toDataURL = (QRCode as unknown as { toDataURL: (text: string, options?: Record<string, unknown>) => Promise<string> }).toDataURL;
+      const dataUrl = await toDataURL(deliveryUrl, { margin: 4, width: 800, errorCorrectionLevel: 'H' });
+      setDeliveryQrDataUrl(dataUrl);
+      toast.success("QR Code Delivery gerado");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao gerar QR");
+    }
+  };
+
+  const handleDownloadDeliveryQr = () => {
+    if (!deliveryQrDataUrl) return;
+    const a = document.createElement("a");
+    a.href = deliveryQrDataUrl;
+    a.download = "delivery-qr.png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   const handleDelete = async (tableId: string, tableNumber: string) => {
@@ -168,6 +202,64 @@ const TablesPage: React.FC = () => {
           </button>
         </div>
 
+        {/* DELIVERY / PEDIDOS ONLINE CARD */}
+        <div className="mb-8 rounded-2xl border-2 border-primary/20 bg-card p-6 shadow-sm">
+          <div className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-3 bg-primary/10 rounded-xl text-primary">
+                  <Bike className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">Delivery & Pedidos Online</h2>
+                  <p className="text-muted-foreground">Link único para clientes fazerem pedidos sem estar em uma mesa (Entrega/Retirada).</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-muted/30 border border-border rounded-xl mb-4 font-mono text-sm break-all">
+                {deliveryUrl}
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleCopyDeliveryLink}
+                  className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
+                >
+                  <Copy className="w-4 h-4" /> Copiar Link
+                </button>
+                <button
+                  onClick={handleGenerateDeliveryQr}
+                  className="px-4 py-2.5 rounded-xl bg-card border border-border hover:bg-muted transition-colors flex items-center gap-2"
+                >
+                  <QrCode className="w-4 h-4" /> Mostrar QR Code
+                </button>
+                <a
+                  href={deliveryUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-4 py-2.5 rounded-xl bg-card border border-border hover:bg-muted transition-colors flex items-center gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" /> Testar Link
+                </a>
+              </div>
+            </div>
+
+            {/* QR CODE PREVIEW */}
+            {deliveryQrDataUrl && (
+              <div className="flex flex-col items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-border/50">
+                <img src={deliveryQrDataUrl} alt="Delivery QR Code" className="w-48 h-48" />
+                <button
+                  onClick={handleDownloadDeliveryQr}
+                  className="text-sm text-primary font-medium flex items-center gap-1 hover:underline"
+                >
+                  <Download className="w-4 h-4" /> Baixar Imagem
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <h2 className="text-lg font-bold mb-4">Mesas do Restaurante</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {tables.length === 0 ? (
             <p className="text-muted-foreground">Nenhuma mesa cadastrada</p>
