@@ -9,6 +9,13 @@ interface OrderCardProps {
   actionLabel?: string;
 }
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  "credit_card": "💳 Crédito",
+  "debit_card": "💳 Débito",
+  "cash": "💵 Dinheiro",
+  "pix": "💠 Pix",
+};
+
 const OrderCard: React.FC<OrderCardProps> = ({ order, onMoveNext, actionLabel }) => {
   const createdDate = new Date(order.created_at);
 
@@ -146,6 +153,14 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMoveNext, actionLabel })
             {(order.customer_address || customerInfo?.address) && (
               <>
                 <span>📍</span> <span className="break-words">{order.customer_address || customerInfo?.address}</span>
+              </>
+            )}
+            {(order.payment_method || customerInfo?.paymentMethod) && (
+              <>
+                <span>💲</span>
+                <span className="font-semibold text-primary">
+                  {PAYMENT_METHOD_LABELS[order.payment_method || customerInfo?.paymentMethod || ""] || (order.payment_method || customerInfo?.paymentMethod)}
+                </span>
               </>
             )}
           </div>

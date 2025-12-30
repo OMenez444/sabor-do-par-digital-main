@@ -25,6 +25,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
   const [remoteName, setRemoteName] = React.useState("");
   const [remotePhone, setRemotePhone] = React.useState("");
   const [remoteAddress, setRemoteAddress] = React.useState("");
+  const [paymentMethod, setPaymentMethod] = React.useState("credit_card"); // Default
 
   // Address search state
   const [addressQuery, setAddressQuery] = React.useState("");
@@ -78,7 +79,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
       const customerInfo = !tableNumber ? {
         name: remoteName,
         phone: remotePhone,
-        address: remoteAddress
+        address: remoteAddress,
+        paymentMethod
       } : undefined;
 
       // Use name as identifier if remote
@@ -91,9 +93,11 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
       });
 
       clearCart();
+      clearCart();
       setRemoteName("");
       setRemotePhone("");
       setRemoteAddress("");
+      setPaymentMethod("credit_card");
       setAddressQuery("");
       onClose();
     } catch (error) {
@@ -254,6 +258,48 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
                           {addr.display_name}
                         </div>
                       ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3 pt-4 border-t border-border mt-4">
+                  <h3 className="font-bold text-sm text-foreground">Forma de Pagamento</h3>
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      { id: "credit_card", label: "💳 Cartão de Crédito (Entrega)" },
+                      { id: "debit_card", label: "💳 Cartão de Débito (Entrega)" },
+                      { id: "cash", label: "💵 Dinheiro (Entrega)" },
+                      { id: "pix", label: "💠 Pix" },
+                    ].map((method) => (
+                      <label
+                        key={method.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${paymentMethod === method.id
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-border hover:bg-muted/50"
+                          }`}
+                      >
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value={method.id}
+                          checked={paymentMethod === method.id}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
+                          className="w-4 h-4 text-primary focus:ring-primary"
+                        />
+                        <span className="text-sm font-medium">{method.label}</span>
+                      </label>
+                    ))}
+                  </div>
+
+                  {paymentMethod === "pix" && (
+                    <div className="p-4 bg-muted/30 rounded-xl border border-dashed border-primary/50 text-center space-y-2 animate-in fade-in slide-in-from-top-2">
+                      <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Chave Pix (CNPJ)</p>
+                      <p className="font-mono text-lg font-bold text-foreground select-all selection:bg-primary/20">
+                        00.000.000/0001-00
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Realize o pagamento e apresente o comprovante na entrega.
+                      </p>
                     </div>
                   )}
                 </div>

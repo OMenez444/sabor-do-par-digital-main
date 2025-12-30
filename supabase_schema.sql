@@ -28,6 +28,7 @@ create table orders (
   customer_name text,
   customer_phone text,
   customer_address text,
+  payment_method text,
   total numeric not null,
   status text default 'pending', -- pending, preparing, ready, delivered, canceled
   items jsonb not null, -- Guardando itens como JSON para simplificar transição

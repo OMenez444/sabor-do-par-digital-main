@@ -9,6 +9,7 @@ export interface Order {
   customer_name?: string | null;
   customer_phone?: string | null;
   customer_address?: string | null;
+  payment_method?: string | null;
   items: CartItem[];
   total: number;
   status: OrderStatus;
@@ -22,6 +23,7 @@ interface OrderDB {
   customer_name: string | null;
   customer_phone: string | null;
   customer_address: string | null;
+  payment_method: string | null;
   items: any; // jsonb
   total: number;
   status: string;
@@ -46,6 +48,7 @@ export const getOrders = async (): Promise<Order[]> => {
     customer_name: o.customer_name,
     customer_phone: o.customer_phone,
     customer_address: o.customer_address,
+    payment_method: o.payment_method,
     items: o.items as CartItem[],
     total: o.total,
     status: o.status as OrderStatus,
@@ -101,6 +104,7 @@ export const addOrder = async (
       customer_name: customerInfo?.name || null,
       customer_phone: customerInfo?.phone || null,
       customer_address: customerInfo?.address || null,
+      payment_method: customerInfo?.paymentMethod || null,
       total,
       status: "pending",
       items: items,
@@ -119,6 +123,7 @@ export const addOrder = async (
     customer_name: data.customer_name,
     customer_phone: data.customer_phone,
     customer_address: data.customer_address,
+    payment_method: data.payment_method,
     items: data.items as CartItem[],
     total: data.total,
     status: data.status as OrderStatus,

@@ -5,6 +5,7 @@ export interface CustomerInfo {
   name: string;
   phone: string;
   address: string;
+  paymentMethod?: string;
 }
 
 export interface CartItem {
