@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Product, Category, categories, getProducts, addProduct, updateProduct, removeProduct } from "@/data/products";
+import { Product, Category, categories, getProducts, addProduct, updateProduct, removeProduct, resetMenu } from "@/data/products";
 import { Plus, Trash2, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -64,12 +64,24 @@ const MenuManager: React.FC = () => {
     toast.success("Produto removido");
   };
 
+  const handleReset = async () => {
+    if (!confirm("Isso apagará TODOS os produtos atuais e restaurará o cardápio padrão. Deseja continuar?")) return;
+    await resetMenu();
+    reload();
+    toast.success("Cardápio restaurado com sucesso!");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-card border-b border-border p-4">
         <div className="container flex items-center justify-between">
           <h1 className="text-xl font-bold">Gerenciar Cardápio</h1>
-          <a href="/admin/cozinha" className="text-sm text-muted-foreground">Voltar</a>
+          <div className="flex items-center gap-4">
+            <button onClick={handleReset} className="text-sm px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors">
+              Restaurar Padrão
+            </button>
+            <a href="/admin/cozinha" className="text-sm text-muted-foreground">Voltar</a>
+          </div>
         </div>
       </header>
 
