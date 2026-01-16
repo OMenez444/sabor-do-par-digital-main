@@ -73,6 +73,7 @@ export const initialProducts: Product[] = [
     description: "Pão brioche, Hambúrguer artesanal de frango 120g, queijo cheddar e molho do chef",
     price: 35.00,
     category: "lanches",
+    image: "/images/franbacon_1768590959843.png",
     available: true,
   },
   {
@@ -176,6 +177,7 @@ export const initialProducts: Product[] = [
     description: "500g de batata com queijo e 150g de costela desfiada",
     price: 45.00,
     category: "porcoes",
+    image: "/images/batata_do_para_1768590307125.png",
     available: true,
   },
 
@@ -186,7 +188,7 @@ export const initialProducts: Product[] = [
     description: "500ml",
     price: 3.50,
     category: "bebidas",
-    image: "/images/agua_mineral_1768588081554.png",
+    image: "/images/agua_indaia.jpg",
     available: true,
   },
   {
@@ -204,7 +206,7 @@ export const initialProducts: Product[] = [
     description: "Garrafa 500ml",
     price: 6.00,
     category: "bebidas",
-    image: "/images/agua_com_gas_1768588095847.png",
+    image: "/images/h2oh.jpg",
     available: true,
   },
   {
@@ -213,7 +215,7 @@ export const initialProducts: Product[] = [
     description: "Sabores variados",
     price: 7.00,
     category: "bebidas",
-    image: "/images/suco_lata_1768588124133.png",
+    image: "/images/suco_del_valle.jpg",
     available: true,
   },
   {
@@ -231,7 +233,7 @@ export const initialProducts: Product[] = [
     description: "Garrafa 1 Litro",
     price: 10.00,
     category: "bebidas",
-    image: "/images/refrigerante_1768588110169.png",
+    image: "/images/refri_pepsi_1l.jpg",
     available: true,
   },
   {
@@ -240,7 +242,7 @@ export const initialProducts: Product[] = [
     description: "Garrafa 2 Litros",
     price: 12.00,
     category: "bebidas",
-    image: "/images/refrigerante_1768588110169.png",
+    image: "/images/refri_coca_2l.jpg",
     available: true,
   },
   {
@@ -249,7 +251,7 @@ export const initialProducts: Product[] = [
     description: "Garrafinha",
     price: 5.00,
     category: "bebidas",
-    image: "/images/cerveja_1768588137901.png",
+    image: "/images/cerveja_barrigudinha.jpg",
     available: true,
   },
   {
