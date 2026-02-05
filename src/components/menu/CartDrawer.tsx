@@ -74,8 +74,15 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
   };
 
   const selectAddress = (addr: any) => {
-    // Formato limpo: Logradouro, Bairro
-    const formatted = `${addr.logradouro}, ${addr.bairro}`;
+    // Formato Seguro: Logradouro, Bairro (ou fallback)
+    const parts = [];
+    if (addr.logradouro) parts.push(addr.logradouro);
+    if (addr.bairro) parts.push(addr.bairro);
+
+    // Se não tiver nada, usa a localidade (incomum no fluxo de rua, mas seguro)
+    if (parts.length === 0 && addr.localidade) parts.push(addr.localidade);
+
+    const formatted = parts.join(", ");
     setRemoteAddress(formatted);
     setAddressQuery(formatted);
     setAddressToSelect([]);
@@ -271,15 +278,19 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
 
                   {/* Lista de sugestões */}
                   {addressToSelect.length > 0 && (
-                    <div className="absolute bottom-full left-0 w-full mb-1 bg-popover border border-border rounded-lg shadow-lg z-50 max-h-40 overflow-y-auto">
+                    <div className="absolute bottom-full left-0 w-full mb-1 bg-white dark:bg-zinc-900 border border-border rounded-lg shadow-xl z-50 max-h-40 overflow-y-auto">
                       {addressToSelect.map((addr: any, i) => (
                         <div
                           key={i}
                           onClick={() => selectAddress(addr)}
-                          className="p-2 text-xs hover:bg-muted cursor-pointer border-b border-border/50 last:border-0 flex flex-col"
+                          className="p-3 text-xs hover:bg-muted cursor-pointer border-b border-border/50 last:border-0 flex flex-col gap-0.5"
                         >
-                          <span className="font-bold">{addr.logradouro}</span>
-                          <span className="text-muted-foreground">{addr.bairro}</span>
+                          <span className="font-bold text-foreground text-sm">
+                            {addr.logradouro || addr.localidade}
+                          </span>
+                          {addr.bairro && (
+                            <span className="text-muted-foreground">{addr.bairro}</span>
+                          )}
                         </div>
                       ))}
                     </div>
