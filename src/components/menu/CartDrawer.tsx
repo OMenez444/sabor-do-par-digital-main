@@ -98,9 +98,20 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
   };
 
   const selectAddress = (addr: any) => {
-    // Usa os dados processados para preencher o campo de forma limpa
-    const main = addr.processed?.main || "";
+    let main = addr.processed?.main || "";
     const secondary = addr.processed?.secondary || "";
+
+    // Truque para preservar o número que o usuário digitou
+    // Se a API não trouxe número no "main", mas o usuário digitou...
+    const hasNumberInMain = /\d+$/.test(main.trim());
+
+    if (!hasNumberInMain) {
+      // RegEx para pegar número no final (ex: "Rua X 123" ou "Rua X, 123")
+      const numberMatch = addressQuery.match(/[,\s]+(\d+)\s*$/);
+      if (numberMatch && numberMatch[1]) {
+        main += `, ${numberMatch[1]}`;
+      }
+    }
 
     // Formato final: Rua, Bairro
     const formatted = secondary ? `${main}, ${secondary}` : main;
