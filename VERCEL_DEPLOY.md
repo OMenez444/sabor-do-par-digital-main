@@ -20,8 +20,10 @@ Este documento descreve como conectar o repositório ao Vercel e publicar seu ap
    - **Output Directory**: `dist`
    - **Install Command**: `npm ci` (ou `npm install`)
 4. Clique em **Environment Variables** e adicione as variáveis abaixo (opcionalmente por ambiênte: Preview/Production/Development):
-   - `VITE_BASE_URL` — **(Recomendado)** URL pública do deploy (ex.: `https://meu-app.vercel.app`). Quando definida, o app usará essa base para gerar links de QR que funcionarão em outros dispositivos.
-   - Se você automatizar deploys via CLI/API, adicione também `VERCEL_TOKEN` (não é necessário só para deploy via web).
+   - `VITE_SUPABASE_URL`: **(Obrigatório)** A URL do seu projeto Supabase.
+   - `VITE_SUPABASE_ANON_KEY`: **(Obrigatório)** A chave pública (anon) do seu projeto Supabase.
+   - `VITE_BASE_URL`: **(Recomendado)** URL pública do deploy (ex.: `https://meu-app.vercel.app`). Essencial para o QR Code funcionar corretamente.
+   - `VERCEL_TOKEN`: (Opcional) Apenas para deploys via CLI automatizada.
 5. Clique em **Deploy**. O Vercel fará build e criará uma URL pública (preview/prod conforme branch).
 
 ---
