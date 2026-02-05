@@ -34,8 +34,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
   const searchTimeoutRef = React.useRef<any>(null);
 
   /* 
-   * Restrição de busca para Itumbiara - GO 
-   * Adicionamos viewbox (opcional) ou estruturamos a query
+   * Busca Híbrida: Nominatim (Inteligente) + Filtro Visual (Limpo)
    */
   const handleSearchAddress = (query: string) => {
     setAddressQuery(query);
@@ -51,22 +50,42 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
     searchTimeoutRef.current = setTimeout(async () => {
       setIsSearchingAddress(true);
       try {
-        // Força busca em Itumbiara, Goiás
+        // Busca em Itumbiara via Nominatim
+        // Usamos &addressdetails=1 para pegar road, suburb, etc
         const searchQuery = `${query}, Itumbiara, Goiás, Brazil`;
         const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5&addressdetails=1`);
         const data = await res.json();
 
-        // Filtra resultados para garantir que são de Itumbiara (caso a API retorne outros)
-        const filteredData = data.filter((item: any) =>
-          item.address?.city === "Itumbiara" ||
-          item.address?.town === "Itumbiara" ||
-          item.address?.municipality === "Itumbiara" ||
-          item.display_name.includes("Itumbiara")
+        // Processa cada resultado para extrair apenas o essencial
+        // Ignoramos o display_name da API que é muito longo
+        const processedData = data.map((item: any) => {
+          const addr = item.address || {};
+
+          // Tenta achar o nome da rua em varias propriedades da API
+          const road = addr.road || addr.pedestrian || addr.footway || addr.cycleway || addr.path || addr.street;
+
+          // Tenta achar o bairro
+          const suburb = addr.suburb || addr.neighbourhood || addr.residential || addr.city_district || addr.quarter;
+
+          // Se não for rua, pode ser um local específico (ex: Shopping)
+          const placeName = !road ? (addr.amenity || addr.shop || addr.tourism || addr.leisure || item.name) : null;
+
+          return {
+            ...item,
+            processed: {
+              main: road || placeName || "Local sem nome definido",
+              secondary: suburb || "Itumbiara"
+            }
+          };
+        }).filter((item: any) =>
+          // Filtro de segurança: garante que é de Itumbiara
+          (item.address?.city === "Itumbiara" || item.address?.town === "Itumbiara" || item.address?.municipality === "Itumbiara" || item.display_name.includes("Itumbiara"))
         );
 
-        setAddressToSelect(filteredData);
+        setAddressToSelect(processedData);
       } catch (e) {
         console.error("Address search failed", e);
+        setAddressToSelect([]);
       } finally {
         setIsSearchingAddress(false);
       }
@@ -74,15 +93,13 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
   };
 
   const selectAddress = (addr: any) => {
-    // Formato Seguro: Logradouro, Bairro (ou fallback)
-    const parts = [];
-    if (addr.logradouro) parts.push(addr.logradouro);
-    if (addr.bairro) parts.push(addr.bairro);
+    // Usa os dados processados para preencher o campo de forma limpa
+    const main = addr.processed?.main || "";
+    const secondary = addr.processed?.secondary || "";
 
-    // Se não tiver nada, usa a localidade (incomum no fluxo de rua, mas seguro)
-    if (parts.length === 0 && addr.localidade) parts.push(addr.localidade);
+    // Formato final: Rua, Bairro
+    const formatted = secondary ? `${main}, ${secondary}` : main;
 
-    const formatted = parts.join(", ");
     setRemoteAddress(formatted);
     setAddressQuery(formatted);
     setAddressToSelect([]);
@@ -272,6 +289,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
                     value={addressQuery}
                     onChange={(e) => handleSearchAddress(e.target.value)}
                     placeholder="Buscar Endereço em Itumbiara..."
+                    autoComplete="off"
+                    name="search-address-custom"
                     className="w-full p-3 rounded-lg border border-border bg-background text-sm outline-none focus:ring-1 focus:ring-primary"
                   />
                   {isSearchingAddress && <span className="absolute right-3 top-3 text-xs text-muted-foreground animate-pulse">Buscando...</span>}
@@ -286,11 +305,11 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
                           className="p-3 text-xs hover:bg-muted cursor-pointer border-b border-border/50 last:border-0 flex flex-col gap-0.5"
                         >
                           <span className="font-bold text-foreground text-sm">
-                            {addr.logradouro || addr.localidade}
+                            {addr.processed?.main}
                           </span>
-                          {addr.bairro && (
-                            <span className="text-muted-foreground">{addr.bairro}</span>
-                          )}
+                          <span className="text-muted-foreground">
+                            {addr.processed?.secondary}
+                          </span>
                         </div>
                       ))}
                     </div>
