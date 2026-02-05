@@ -67,7 +67,16 @@ export const PrintableTicket = React.forwardRef<HTMLDivElement, PrintableTicketP
             </div>
 
             {order.payment_method && (
-                <p className="mt-2 text-center">Pagamento: {order.payment_method}</p>
+                <p className="mt-2 text-center">
+                    Pagamento: {
+                        {
+                            "credit_card": "Crédito",
+                            "debit_card": "Débito",
+                            "cash": "Dinheiro",
+                            "pix": "Pix"
+                        }[order.payment_method] || order.payment_method
+                    }
+                </p>
             )}
 
             <div className="mt-8 text-center text-xs border-t border-dashed border-black pt-2">
