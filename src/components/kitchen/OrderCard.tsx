@@ -17,7 +17,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   "pix": "💠 Pix",
 };
 
-const OrderCard: React.FC<OrderCardProps> = ({ order, onMoveNext, actionLabel }) => {
+const OrderCard: React.FC<OrderCardProps> = ({ order, onMoveNext, onPrint, actionLabel }) => {
   const createdDate = new Date(order.created_at);
 
   const formatTime = (d: Date | string) => {
