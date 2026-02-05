@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Product, Category, categories, getProducts, addProduct, updateProduct, removeProduct, resetMenu } from "@/data/products";
+import { Product, Category, categories, getProducts, addProduct, updateProduct, removeProduct, adminResetMenu } from "@/data/products";
 import { Plus, Trash2, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -36,10 +36,12 @@ const MenuManager: React.FC = () => {
 
   const handleAdd = async () => {
     if (!form.name.trim()) return toast.error("Nome obrigatório");
-    await addProduct({ name: form.name, description: form.description, price: form.price, category: form.category, available: form.available, image: form.image });
-    setForm(emptyForm());
-    reload();
-    toast.success("Produto adicionado");
+    const res = await addProduct({ name: form.name, description: form.description, price: form.price, category: form.category, available: form.available, image: form.image });
+    if (res) {
+      setForm(emptyForm());
+      reload();
+      toast.success("Produto adicionado");
+    }
   };
 
   const handleStartEdit = (p: Product) => {
@@ -50,11 +52,13 @@ const MenuManager: React.FC = () => {
 
   const handleSaveEdit = async () => {
     if (!editingId) return;
-    await updateProduct(editingId, { name: form.name, description: form.description, price: form.price, category: form.category, available: form.available, image: form.image });
-    setEditingId(null);
-    setForm(emptyForm());
-    reload();
-    toast.success("Produto atualizado");
+    const res = await updateProduct(editingId, { name: form.name, description: form.description, price: form.price, category: form.category, available: form.available, image: form.image });
+    if (res) {
+      setEditingId(null);
+      setForm(emptyForm());
+      reload();
+      toast.success("Produto atualizado");
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -66,7 +70,7 @@ const MenuManager: React.FC = () => {
 
   const handleReset = async () => {
     if (!confirm("Isso apagará TODOS os produtos atuais e restaurará o cardápio padrão. Deseja continuar?")) return;
-    await resetMenu();
+    await adminResetMenu();
     reload();
     toast.success("Cardápio restaurado com sucesso!");
   };
