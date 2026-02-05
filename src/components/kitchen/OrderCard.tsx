@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 interface OrderCardProps {
   order: Order;
   onMoveNext?: () => void;
+  onPrint?: (order: Order) => void;
   actionLabel?: string;
 }
 
@@ -133,6 +134,18 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onMoveNext, actionLabel })
             </div>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
+            {onPrint && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPrint(order);
+                }}
+                className="p-1.5 hover:bg-black/5 rounded-full transition-colors mr-1"
+                title="Imprimir Comanda"
+              >
+                <Printer className="w-5 h-5 text-foreground/70" />
+              </button>
+            )}
             <StatusIcon className={cn("w-5 h-5", statusConfig.iconColor)} />
             <span className="text-sm font-medium">{getTimeSince(createdDate)}</span>
           </div>

@@ -8,6 +8,7 @@ interface KanbanColumnProps {
   status: OrderStatus;
   orders: Order[];
   onMoveOrder: (orderId: string, newStatus: OrderStatus) => void;
+  onPrint?: (order: Order) => void;
   actionLabel?: string;
   nextStatus?: OrderStatus;
   headerColor: string;
@@ -19,6 +20,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   status,
   orders,
   onMoveOrder,
+  onPrint,
   actionLabel,
   nextStatus,
   headerColor,
@@ -59,6 +61,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
                   : undefined
               }
               actionLabel={actionLabel}
+              onPrint={onPrint}
             />
           ))
         )}

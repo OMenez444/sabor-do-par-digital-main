@@ -6,6 +6,7 @@ import KitchenHeader from "@/components/kitchen/KitchenHeader";
 import KanbanColumn from "@/components/kitchen/KanbanColumn";
 import { Clock, ChefHat, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { PrintableTicket } from "@/components/kitchen/PrintableTicket";
 
 const KitchenPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -70,8 +71,25 @@ const KitchenPage: React.FC = () => {
     };
   }, []);
 
+  const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+
+  const handlePrint = (order: Order) => {
+    setPrintingOrder(order);
+    setTimeout(() => {
+      window.print();
+      setPrintingOrder(null);
+    }, 100);
+  };
+
   const handleMoveOrder = async (orderId: string, newStatus: OrderStatus) => {
     // Optimistic update
+    const orderToUpdate = orders.find(o => o.id === orderId);
+
+    // Se mover para 'preparing', imprimir automaticamente
+    if (newStatus === 'preparing' && orderToUpdate) {
+      handlePrint(orderToUpdate);
+    }
+
     setOrders(current => current.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
     await updateOrderStatus(orderId, newStatus);
   };
@@ -119,6 +137,7 @@ const KitchenPage: React.FC = () => {
             nextStatus="preparing"
             headerColor="bg-warning text-warning-foreground"
             icon={<Clock className="w-6 h-6" />}
+            onPrint={handlePrint}
           />
 
           <KanbanColumn
@@ -130,6 +149,7 @@ const KitchenPage: React.FC = () => {
             nextStatus="ready"
             headerColor="bg-info text-info-foreground"
             icon={<ChefHat className="w-6 h-6" />}
+            onPrint={handlePrint}
           />
 
           <KanbanColumn
@@ -139,11 +159,13 @@ const KitchenPage: React.FC = () => {
             onMoveOrder={handleMoveOrder}
             headerColor="bg-success text-success-foreground"
             icon={<CheckCircle className="w-6 h-6" />}
+            onPrint={handlePrint}
           />
         </div>
       </main>
 
 
+      <PrintableTicket order={printingOrder} />
     </div>
   );
 };
