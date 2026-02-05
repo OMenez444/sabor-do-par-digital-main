@@ -13,6 +13,46 @@ const emptyForm = (catId?: string) => ({
   image: undefined as string | undefined,
 });
 
+const processImage = (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        } else {
+          resolve(String(e.target?.result));
+        }
+      };
+      img.src = String(e.target?.result);
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
 const MenuManager: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -25,13 +65,16 @@ const MenuManager: React.FC = () => {
 
   useEffect(() => { reload(); }, []);
 
-  const onChangeFile = (file?: File) => {
+  const onChangeFile = async (file?: File) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setForm((s) => ({ ...s, image: String(reader.result) }));
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await processImage(file);
+      setForm((s) => ({ ...s, image: compressed }));
+      toast.success("Imagem processada e pronta");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao processar imagem");
+    }
   };
 
   const handleAdd = async () => {
