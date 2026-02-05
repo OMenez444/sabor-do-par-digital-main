@@ -12,7 +12,10 @@ const TablesPage: React.FC = () => {
   const [newNumber, setNewNumber] = useState("");
   const [deliveryQrDataUrl, setDeliveryQrDataUrl] = useState<string | null>(null);
 
-  const deliveryUrl = (import.meta.env.VITE_BASE_URL || "https://sabor-do-par-digital-main.vercel.app") + "/menu/sabor-do-para";
+  // Força URL de produção para QR Codes impressos, conforme solicitado
+  const PRODUCTION_URL = "https://sabor-do-par-digital-main.vercel.app";
+
+  const deliveryUrl = PRODUCTION_URL + "/menu/sabor-do-para";
 
   const loadData = async () => {
     setTables(getTables());
@@ -149,8 +152,7 @@ const TablesPage: React.FC = () => {
     });
   };
 
-  // Força URL de produção para QR Codes impressos, conforme solicitado
-  const PRODUCTION_URL = "https://sabor-do-par-digital-main.vercel.app";
+
 
   const handleGenerateQr = async (t: Table) => {
     // Usar sempre a URL de produção para garantir que o QR Code seja permanente e imprimível
