@@ -70,10 +70,15 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
           // Se não for rua, pode ser um local específico (ex: Shopping)
           const placeName = !road ? (addr.amenity || addr.shop || addr.tourism || addr.leisure || item.name) : null;
 
+          let main = road || placeName || "Local sem nome definido";
+          if (addr.house_number) {
+            main += `, ${addr.house_number}`;
+          }
+
           return {
             ...item,
             processed: {
-              main: road || placeName || "Local sem nome definido",
+              main,
               secondary: suburb || "Itumbiara"
             }
           };
