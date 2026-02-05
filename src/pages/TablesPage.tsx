@@ -149,29 +149,12 @@ const TablesPage: React.FC = () => {
     });
   };
 
-  const handleGenerateQr = async (t: Table) => {
-    // 1. Prioridade: Variável de ambiente (Vercel)
-    const envBase = import.meta.env.VITE_BASE_URL;
-    if (envBase) {
-      const url = `${envBase}/menu/sabor-do-para?mesa=${t.number}`;
-      try {
-        const toDataURL = (QRCode as unknown as { toDataURL: (text: string, options?: Record<string, unknown>) => Promise<string> }).toDataURL;
-        const dataUrl = await toDataURL(url, { margin: 4, width: 800, errorCorrectionLevel: 'H' });
-        setTableQr(t.id, url, dataUrl);
-        reload();
-        toast.success("QR gerado (URL de produção/ambiente)");
-        return;
-      } catch (e) {
-        console.error(e);
-        toast.error("Falha ao gerar QR com VITE_BASE_URL");
-        return;
-      }
-    }
+  // Força URL de produção para QR Codes impressos, conforme solicitado
+  const PRODUCTION_URL = "https://sabor-do-par-digital-main.vercel.app";
 
-    // 2. Fallback: Lógica  const handleGenerateQr = async (t: Table) => {
-    // URL fixa de produção para garantir QR Codes permanentes
-    const baseUrl = "https://sabor-do-par-digital-main.vercel.app";
-    const url = `${baseUrl}/menu/sabor-do-para?mesa=${t.number}`;
+  const handleGenerateQr = async (t: Table) => {
+    // Usar sempre a URL de produção para garantir que o QR Code seja permanente e imprimível
+    const url = `${PRODUCTION_URL}/menu/sabor-do-para?mesa=${t.number}`;
 
     try {
       const toDataURL = (QRCode as unknown as { toDataURL: (text: string, options?: Record<string, unknown>) => Promise<string> }).toDataURL;
