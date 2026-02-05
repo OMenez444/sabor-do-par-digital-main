@@ -15,6 +15,8 @@ const TablesPage: React.FC = () => {
   // Força URL de produção para QR Codes impressos, conforme solicitado
   const PRODUCTION_URL = "https://sabor-do-par-digital-main.vercel.app";
 
+
+
   const deliveryUrl = PRODUCTION_URL + "/menu/sabor-do-para";
 
   const loadData = async () => {
