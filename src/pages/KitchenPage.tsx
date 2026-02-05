@@ -13,6 +13,52 @@ const KitchenPage: React.FC = () => {
   const navigate = useNavigate();
   // Drawer removed: now managed in a separate page (/admin/mesas) opened in a new tab
 
+  const [audioEnabled, setAudioEnabled] = useState(false);
+
+  // Fallback: Beep via Web Audio API (não precisa de arquivo)
+  const playBeep = () => {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
+      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.5);
+
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch (e) {
+      console.error("Beep error", e);
+    }
+  };
+
+  const playNotification = async () => {
+    try {
+      const audio = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_c8c8a73467.mp3");
+      audio.volume = 1.0;
+      await audio.play();
+      setAudioEnabled(true);
+    } catch (error) {
+      console.warn("Audio file failed or autoplay blocked, trying beep...", error);
+      playBeep();
+    }
+  };
+
+  const enableAudio = () => {
+    playNotification();
+    toast.success("Som ativado com sucesso!");
+  };
+
   useEffect(() => {
     // 1. Initial Load
     const loadOrders = async () => {
@@ -37,12 +83,8 @@ const KitchenPage: React.FC = () => {
             const newOrder = payload.new as Order;
 
             // Tocar som (efeito de sino/notificação)
-            try {
-              const audio = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_c8c8a73467.mp3"); // Notification sound
-              audio.play().catch(e => console.error("Erro ao tocar som:", e));
-            } catch (e) {
-              console.error("Audio error", e);
-            }
+            // Tocar som (tenta arquivo ou beep)
+            playNotification();
 
             // Mostrar Popup (Toast)
             toast("🔔 NOVO PEDIDO CHEGOU!", {
@@ -125,6 +167,24 @@ const KitchenPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <KitchenHeader onRefresh={handleRefresh} onFinalize={handleFinalize} />
+
+      {!audioEnabled && (
+        <div className="bg-destructive/10 border-l-4 border-destructive p-4 mb-4 container mx-auto rounded-r flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🔇</span>
+            <div>
+              <p className="font-bold text-destructive-foreground">O som de notificação está inativo</p>
+              <p className="text-sm text-muted-foreground">O navegador bloqueou o som automático.</p>
+            </div>
+          </div>
+          <button
+            onClick={enableAudio}
+            className="px-4 py-2 bg-destructive text-white rounded-lg font-bold hover:bg-destructive/90 transition-colors shadow-lg animate-pulse"
+          >
+            ATIVAR SOM AGORA 🔊
+          </button>
+        </div>
+      )}
 
       <main className="flex-1 container py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-140px)]">
