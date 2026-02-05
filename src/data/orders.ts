@@ -117,7 +117,7 @@ export const addOrder = async (
       customer_name: customerInfo?.name || null,
       customer_phone: customerInfo?.phone || null,
       customer_address: customerInfo?.address || null,
-      payment_method: customerInfo?.paymentMethod || null,
+
       total,
       status: "pending",
       items: items,
