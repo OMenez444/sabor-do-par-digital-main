@@ -12,8 +12,8 @@ const TablesPage: React.FC = () => {
   const [newNumber, setNewNumber] = useState("");
   const [deliveryQrDataUrl, setDeliveryQrDataUrl] = useState<string | null>(null);
 
-  // Força URL de produção para QR Codes impressos, conforme solicitado
-  const PRODUCTION_URL = "https://sabor-do-par-digital-main.vercel.app";
+  // Força URL de produção para QR Codes impressos (Domínio Personalizado)
+  const PRODUCTION_URL = "https://www.sabordopara.shop";
 
 
 
