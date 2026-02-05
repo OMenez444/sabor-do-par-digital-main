@@ -15,9 +15,10 @@ const TablesPage: React.FC = () => {
   // Força URL de produção para QR Codes impressos (Domínio Personalizado)
   const PRODUCTION_URL = "https://www.sabordopara.shop";
 
-
-
-  const deliveryUrl = PRODUCTION_URL + "/menu/sabor-do-para";
+  // Usa a URL atual do navegador para links de teste/cópia (funciona imediatamente)
+  // Mas usa o domínio fixo para gerar o QR Code físico (para não perder validade)
+  const currentBaseUrl = typeof window !== 'undefined' ? window.location.origin : PRODUCTION_URL;
+  const deliveryUrl = currentBaseUrl + "/menu/sabor-do-para";
 
   const loadData = async () => {
     setTables(getTables());
@@ -49,11 +50,13 @@ const TablesPage: React.FC = () => {
   };
 
   const handleGenerateDeliveryQr = async () => {
+    // QR Code SEMPRE usa o domínio fixo (shop) para ser impresso
+    const fixedDeliveryUrl = PRODUCTION_URL + "/menu/sabor-do-para";
     try {
       const toDataURL = (QRCode as unknown as { toDataURL: (text: string, options?: Record<string, unknown>) => Promise<string> }).toDataURL;
-      const dataUrl = await toDataURL(deliveryUrl, { margin: 4, width: 800, errorCorrectionLevel: 'H' });
+      const dataUrl = await toDataURL(fixedDeliveryUrl, { margin: 4, width: 800, errorCorrectionLevel: 'H' });
       setDeliveryQrDataUrl(dataUrl);
-      toast.success("QR Code Delivery gerado");
+      toast.success("QR Code Delivery gerado (Domínio Oficial .shop)");
     } catch (e) {
       console.error(e);
       toast.error("Erro ao gerar QR");
