@@ -33,6 +33,7 @@ export const getProducts = async (): Promise<Product[]> => {
 
   if (error) {
     console.error("Error fetching products:", error);
+    toast.error("Erro ao carregar cardápio: " + error.message);
     return [];
   }
 
