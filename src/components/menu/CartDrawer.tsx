@@ -27,75 +27,9 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
   const [remoteAddress, setRemoteAddress] = React.useState("");
   const [paymentMethod, setPaymentMethod] = React.useState("credit_card"); // Default
 
-  // Address search state
-  const [addressQuery, setAddressQuery] = React.useState("");
-  const [addressToSelect, setAddressToSelect] = React.useState<any[]>([]);
-  const [isSearchingAddress, setIsSearchingAddress] = React.useState(false);
-  const searchTimeoutRef = React.useRef<any>(null);
+  // Address state removed - manual entry only
 
-  /* 
-   * Busca Nominatim Padrão (Com Filtro Rígido)
-   */
-  const handleSearchAddress = (query: string) => {
-    setAddressQuery(query);
-    setRemoteAddress(query); // Allow manual typing
-
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-
-    if (query.length < 3) {
-      setAddressToSelect([]);
-      return;
-    }
-
-    searchTimeoutRef.current = setTimeout(async () => {
-      setIsSearchingAddress(true);
-      try {
-        // Busca com viewbox para priorizar a região, mas mantemos o filtro manual por segurança
-        const searchQuery = `${query}, Itumbiara, Goiás, Brazil`;
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=10&addressdetails=1`);
-        const data = await res.json();
-
-        // Filtro Rigoroso para Itumbiara
-        const filteredData = data.filter((item: any) => {
-          const addr = item.address || {};
-          // Verifica se algum campo de cidade corresponde exatamente a Itumbiara
-          const city = addr.city || addr.town || addr.municipality || addr.village || addr.hamlet || addr.city_district;
-
-          // Verifica também o estado para evitar Itumbiara em outro lugar (improvável, mas bom garantir)
-          const state = addr.state || "";
-
-          // Aceita se a cidade for Itumbiara OU se o display_name tiver Itumbiara (fallback) 
-          // mas rejeita se a cidade for explicitamente outra (ex: Cristianópolis)
-          const isItumbiara = (city === "Itumbiara") || (item.display_name && item.display_name.includes("Itumbiara"));
-
-          // Se tiver uma cidade definida e NAO for Itumbiara, remove.
-          if (city && city !== "Itumbiara") return false;
-
-          return isItumbiara;
-        });
-
-        setAddressToSelect(filteredData);
-      } catch (e) {
-        console.error("Address search failed", e);
-        setAddressToSelect([]);
-      } finally {
-        setIsSearchingAddress(false);
-      }
-    }, 800);
-  };
-
-  const selectAddress = (addr: any) => {
-    // Revertido para usar o nome completo fornecido pela API
-    const fullAddress = addr.display_name;
-
-    // Pequeno ajuste: se o usuário digitou um número e ele não está no fullAddress, tentamos anexar?
-    // O usuário pediu o "padrão inicial". No padrão inicial, era apenas display_name.
-    // Mas para garantir que o número não suma se ele digitou...
-
-    setRemoteAddress(fullAddress);
-    setAddressQuery(fullAddress);
-    setAddressToSelect([]);
-  };
+  // Busca automática removida a pedido do usuário. Entrada totalmente manual.
 
   const handleConfirmOrder = async () => {
     if (items.length === 0) return;
@@ -137,7 +71,6 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
       setRemotePhone("");
       setRemoteAddress("");
       setPaymentMethod("credit_card");
-      setAddressQuery("");
       onClose();
     } catch (error) {
       console.error(error);
@@ -278,31 +211,11 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
                 <div className="space-y-1 relative">
                   <input
                     type="text"
-                    value={addressQuery}
-                    onChange={(e) => handleSearchAddress(e.target.value)}
-                    placeholder="Buscar Endereço em Itumbiara..."
-                    autoComplete="off"
-                    name="search-address-custom"
+                    value={remoteAddress}
+                    onChange={(e) => setRemoteAddress(e.target.value)}
+                    placeholder="Endereço Completo (Rua, Número, Bairro)"
                     className="w-full p-3 rounded-lg border border-border bg-background text-sm outline-none focus:ring-1 focus:ring-primary"
                   />
-                  {isSearchingAddress && <span className="absolute right-3 top-3 text-xs text-muted-foreground animate-pulse">Buscando...</span>}
-
-                  {/* Lista de sugestões */}
-                  {addressToSelect.length > 0 && (
-                    <div className="absolute bottom-full left-0 w-full mb-1 bg-white dark:bg-zinc-900 border border-border rounded-lg shadow-xl z-50 max-h-40 overflow-y-auto">
-                      {addressToSelect.map((addr: any, i) => (
-                        <div
-                          key={i}
-                          onClick={() => selectAddress(addr)}
-                          className="p-3 text-xs hover:bg-muted cursor-pointer border-b border-border/50 last:border-0 flex flex-col gap-0.5"
-                        >
-                          <span className="font-medium text-foreground text-sm">
-                            {addr.display_name}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-border mt-4">
