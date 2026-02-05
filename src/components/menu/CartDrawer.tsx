@@ -33,13 +33,17 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
   const [isSearchingAddress, setIsSearchingAddress] = React.useState(false);
   const searchTimeoutRef = React.useRef<any>(null);
 
+  /* 
+   * Restrição de busca para Itumbiara - GO 
+   * Adicionamos viewbox (opcional) ou estruturamos a query
+   */
   const handleSearchAddress = (query: string) => {
     setAddressQuery(query);
     setRemoteAddress(query); // Allow manual typing
 
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
 
-    if (query.length < 5) {
+    if (query.length < 3) {
       setAddressToSelect([]);
       return;
     }
@@ -47,18 +51,30 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
     searchTimeoutRef.current = setTimeout(async () => {
       setIsSearchingAddress(true);
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+        // Força busca em Itumbiara, Goiás
+        const searchQuery = `${query}, Itumbiara, Goiás, Brazil`;
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5&addressdetails=1`);
         const data = await res.json();
-        setAddressToSelect(data);
+
+        // Filtra resultados para garantir que são de Itumbiara (caso a API retorne outros)
+        const filteredData = data.filter((item: any) =>
+          item.address?.city === "Itumbiara" ||
+          item.address?.town === "Itumbiara" ||
+          item.address?.municipality === "Itumbiara" ||
+          item.display_name.includes("Itumbiara")
+        );
+
+        setAddressToSelect(filteredData);
       } catch (e) {
         console.error("Address search failed", e);
       } finally {
         setIsSearchingAddress(false);
       }
-    }, 1000); // 1s debounce
+    }, 800);
   };
 
   const selectAddress = (addr: any) => {
+    // Limpa o sufixo redundante se desejar, ou mantém completo
     setRemoteAddress(addr.display_name);
     setAddressQuery(addr.display_name);
     setAddressToSelect([]);
@@ -71,6 +87,12 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
     if (!tableNumber) {
       if (!remoteName.trim() || !remotePhone.trim() || !remoteAddress.trim()) {
         toast.error("Por favor, preencha Nome, Telefone e Endereço para entrega.");
+        return;
+      }
+
+      // Validação Extra de Segurança
+      if (!remoteAddress.toLowerCase().includes("itumbiara")) {
+        toast.error("Entregas disponíveis apenas para Itumbiara - GO");
         return;
       }
     }
@@ -241,7 +263,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
                     type="text"
                     value={addressQuery}
                     onChange={(e) => handleSearchAddress(e.target.value)}
-                    placeholder="Buscar Endereço (Rua, Bairro...)"
+                    placeholder="Buscar Endereço em Itumbiara..."
                     className="w-full p-3 rounded-lg border border-border bg-background text-sm outline-none focus:ring-1 focus:ring-primary"
                   />
                   {isSearchingAddress && <span className="absolute right-3 top-3 text-xs text-muted-foreground animate-pulse">Buscando...</span>}
@@ -274,8 +296,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
                       <label
                         key={method.id}
                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${paymentMethod === method.id
-                            ? "border-primary bg-primary/5 shadow-sm"
-                            : "border-border hover:bg-muted/50"
+                          ? "border-primary bg-primary/5 shadow-sm"
+                          : "border-border hover:bg-muted/50"
                           }`}
                       >
                         <input
