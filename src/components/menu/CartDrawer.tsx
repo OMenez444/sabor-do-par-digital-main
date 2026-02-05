@@ -74,9 +74,10 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
   };
 
   const selectAddress = (addr: any) => {
-    // Limpa o sufixo redundante se desejar, ou mantém completo
-    setRemoteAddress(addr.display_name);
-    setAddressQuery(addr.display_name);
+    // Formato limpo: Logradouro, Bairro
+    const formatted = `${addr.logradouro}, ${addr.bairro}`;
+    setRemoteAddress(formatted);
+    setAddressQuery(formatted);
     setAddressToSelect([]);
   };
 
@@ -275,9 +276,10 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
                         <div
                           key={i}
                           onClick={() => selectAddress(addr)}
-                          className="p-2 text-xs hover:bg-muted cursor-pointer border-b border-border/50 last:border-0"
+                          className="p-2 text-xs hover:bg-muted cursor-pointer border-b border-border/50 last:border-0 flex flex-col"
                         >
-                          {addr.display_name}
+                          <span className="font-bold">{addr.logradouro}</span>
+                          <span className="text-muted-foreground">{addr.bairro}</span>
                         </div>
                       ))}
                     </div>

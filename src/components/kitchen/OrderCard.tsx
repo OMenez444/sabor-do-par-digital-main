@@ -1,6 +1,6 @@
 import React from "react";
 import { Order } from "@/data/orders";
-import { Clock, ChefHat, CheckCircle, ArrowRight, Utensils } from "lucide-react";
+import { Clock, ChefHat, CheckCircle, ArrowRight, Utensils, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OrderCardProps {
