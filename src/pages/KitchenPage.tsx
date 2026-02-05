@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import KitchenHeader from "@/components/kitchen/KitchenHeader";
 import KanbanColumn from "@/components/kitchen/KanbanColumn";
 import { Clock, ChefHat, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
 
 const KitchenPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -29,6 +30,36 @@ const KitchenPage: React.FC = () => {
           // Simplest approach: reload all on any change
           // For optimization we could manually update the state based on payload
           console.log('Realtime update:', payload);
+
+          // Se for novo pedido (INSERT), tocar som e mostrar alerta
+          if (payload.eventType === 'INSERT') {
+            const newOrder = payload.new as Order;
+
+            // Tocar som (efeito de sino/notificação)
+            try {
+              const audio = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_c8c8a73467.mp3"); // Notification sound
+              audio.play().catch(e => console.error("Erro ao tocar som:", e));
+            } catch (e) {
+              console.error("Audio error", e);
+            }
+
+            // Mostrar Popup (Toast)
+            toast("🔔 NOVO PEDIDO CHEGOU!", {
+              description: `Mesa: ${newOrder.table_number || 'Delivery'} - R$ ${newOrder.total}`,
+              duration: 10000,
+              action: {
+                label: "Atualizar",
+                onClick: () => loadOrders()
+              },
+              style: {
+                backgroundColor: "#f59e0b", // Amber/Warning color
+                color: "black",
+                fontSize: "1.1rem",
+                fontWeight: "bold"
+              }
+            });
+          }
+
           loadOrders();
         }
       )
