@@ -64,8 +64,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
           // Tenta achar o nome da rua em varias propriedades da API
           const road = addr.road || addr.pedestrian || addr.footway || addr.cycleway || addr.path || addr.street;
 
-          // Tenta achar o bairro
-          const suburb = addr.suburb || addr.neighbourhood || addr.residential || addr.city_district || addr.quarter;
+          // Tenta achar o bairro (expandido para áreas rurais/menores)
+          const suburb = addr.suburb || addr.neighbourhood || addr.residential || addr.city_district || addr.quarter || addr.hamlet || addr.village || addr.district;
 
           // Se não for rua, pode ser um local específico (ex: Shopping)
           const placeName = !road ? (addr.amenity || addr.shop || addr.tourism || addr.leisure || item.name) : null;

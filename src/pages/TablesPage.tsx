@@ -201,17 +201,7 @@ const TablesPage: React.FC = () => {
             <Plus className="w-4 h-4" />
           </button>
 
-          <button
-            onClick={async () => {
-              if (confirm("ATENÇÃO: Isso apagará TODOS os produtos e recriará o cardápio padrão. Continuar?")) {
-                await import("@/data/products").then(m => m.adminResetMenu());
-              }
-            }}
-            className="px-4 py-3 rounded-xl bg-destructive text-destructive-foreground font-bold flex items-center gap-2"
-            title="Resetar Cardápio (Admin)"
-          >
-            <Trash2 className="w-4 h-4" /> RESETAR CARDÁPIO
-          </button>
+
         </div>
 
         {/* DELIVERY / PEDIDOS ONLINE CARD */}
