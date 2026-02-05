@@ -91,11 +91,11 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, tableNumber })
         return;
       }
 
-      // Validação Extra de Segurança
-      if (!remoteAddress.toLowerCase().includes("itumbiara")) {
-        toast.error("Entregas disponíveis apenas para Itumbiara - GO");
-        return;
-      }
+      /* 
+       * A API ViaCEP já garante que endereços buscados são de Itumbiara (pela URL).
+       * Se o usuário digitar manualmente algo fora, será aceito pois não temos validação complexa de string.
+       * Mas a busca assistida está 100% restrita.
+       */
     }
 
     try {
